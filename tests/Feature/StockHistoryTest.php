@@ -77,6 +77,32 @@ class StockHistoryTest extends TestCase
         Mail::assertSent(StockHistory::class);
     }
 
+    public function test_if_stock_history_is_rendered()
+    {
+        $view = $this->view('stockdata', [
+            'stockData' => [
+                [
+                    "date" => 1660311000,
+                    "open" => 169.82000732421875,
+                    "high" => 172.1699981689453,
+                    "low" => 169.39999389648438,
+                    "close" => 172.10000610351562,
+                    "volume" => 67946400,
+                    "adjclose" => 172.10000610351562,
+                ],
+            ],
+            'symbol' => "AAPL",
+            'startDate' => "2022-08-01",
+            'endDate' => "2022-08-12",
+        ]);
+
+        $view->assertSee('169.82000732421875');
+        $view->assertSee('172.1699981689453');
+        $view->assertSee('169.39999389648438');
+        $view->assertSee('172.10000610351562');
+        $view->assertSee('67946400');
+    }
+
     private function configure_http_mocks()
     {
         Http::fake([
