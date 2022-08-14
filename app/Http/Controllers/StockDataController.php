@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StockDataRequest;
 use App\Mail\StockHistory;
+use Illuminate\Support\Facades\Cache;
 use Mail;
 
 class StockDataController extends Controller
@@ -11,9 +12,15 @@ class StockDataController extends Controller
     public function getStockData(StockDataRequest $request)
     {
         $url = "https://yh-finance.p.rapidapi.com/stock/v3/get-historical-data?symbol=" . $request->symbol . "&region=US";
-        $url2 = "https://pkgstore.datahub.io/core/nasdaq-listings/nasdaq-listed_json/data/a5bc7580d6176d60ac0b2142ca8d7df6/nasdaq-listed_json.json";
 
-        $companyJson = file_get_contents($url2);
+        if (Cache::has('company-data')) {
+            $companyJson = Cache::get('company-data');
+        } else {
+            $url2 = "https://pkgstore.datahub.io/core/nasdaq-listings/nasdaq-listed_json/data/a5bc7580d6176d60ac0b2142ca8d7df6/nasdaq-listed_json.json";
+            $companyJson = file_get_contents($url2);
+            Cache::put('company-data', $companyJson, now()->addMinutes(10));
+        }
+
         $companyData = json_decode($companyJson, true);
         $companyDetails = array_values(array_filter($companyData, function ($data) use ($request) {
             return $data['Symbol'] === $request->symbol;
