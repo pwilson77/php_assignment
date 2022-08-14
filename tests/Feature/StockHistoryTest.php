@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Mail\StockHistory;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -32,6 +33,9 @@ class StockHistoryTest extends TestCase
 
     public function test_if_validation_errors_are_thrown()
     {
+
+        $this->configure_http_mocks();
+
         $response = $this->post('/request-stock-history', [
             'symbol' => 'A',
             'email' => 'test.com',
@@ -44,6 +48,8 @@ class StockHistoryTest extends TestCase
 
     public function test_it_redirects_to_stock_history_route()
     {
+        $this->configure_http_mocks();
+
         $response = $this->post('/request-stock-history', [
             'symbol' => 'AAPL',
             'email' => 'test@gmail.com',
@@ -57,6 +63,7 @@ class StockHistoryTest extends TestCase
     public function test_if_email_was_sent()
     {
         Mail::fake();
+        $this->configure_http_mocks();
 
         $response = $this->post('/request-stock-history', [
             'symbol' => 'AAPL',
@@ -68,5 +75,66 @@ class StockHistoryTest extends TestCase
         $response->assertStatus(200);
 
         Mail::assertSent(StockHistory::class);
+    }
+
+    private function configure_http_mocks()
+    {
+        Http::fake([
+            // Stub a JSON response for endpoints
+            'pkgstore.datahub.io/*' => Http::response([
+                [
+                    "Company Name" => "Apple Inc.",
+                    "Financial Status" => "N",
+                    "Market Category" => "Q",
+                    "Round Lot Size" => 100,
+                    "Security Name" => "Apple Inc. - Common Stock",
+                    "Symbol" => "AAPL",
+                    "Test Issue" => "N",
+                ],
+                [
+                    "Company Name" => "Avalanche Biotechnologies, Inc.",
+                    "Financial Status" => "N",
+                    "Market Category" => "G",
+                    "Round Lot Size" => 100,
+                    "Security Name" => "Avalanche Biotechnologies, Inc. - Common Stock",
+                    "Symbol" => "AAVL",
+                    "Test Issue" => "N",
+                ],
+            ], 200, ['$headers']),
+
+            // Stub a string response for  endpoints
+            'yh-finance.p.rapidapi.com/*' => Http::response(
+                array("prices" => [
+                    [
+                        "date" => 1660311000,
+                        "open" => 169.82000732421875,
+                        "high" => 172.1699981689453,
+                        "low" => 169.39999389648438,
+                        "close" => 172.10000610351562,
+                        "volume" => 67946400,
+                        "adjclose" => 172.10000610351562,
+                    ],
+                    [
+                        "date" => 1660224600,
+                        "open" => 170.05999755859375,
+                        "high" => 170.99000549316406,
+                        "low" => 168.19000244140625,
+                        "close" => 168.49000549316406,
+                        "volume" => 57149200,
+                        "adjclose" => 168.49000549316406,
+                    ],
+                    [
+                        "date" => 1660138200,
+                        "open" => 167.67999267578125,
+                        "high" => 169.33999633789062,
+                        "low" => 166.89999389648438,
+                        "close" => 169.24000549316406,
+                        "volume" => 70170500,
+                        "adjclose" => 169.24000549316406,
+                    ]]), 200, [
+                    "X-RapidAPI-Key" => env('RAPID_API_KEY', ''),
+                    "X-RapidAPI-Host" => "yh-finance.p.rapidapi.com",
+                ]),
+        ]);
     }
 }

@@ -18,8 +18,4 @@ Route::get('/', function () {
     return view('stockDataForm');
 });
 
-Route::get('/stockdata', function () {
-    return view('stockData');
-});
-
 Route::post('/request-stock-history', [StockDataController::class, 'getStockData']);

@@ -4,6 +4,7 @@ namespace App\Rules;
 
 use Illuminate\Contracts\Validation\Rule;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 class ValidSymbolRule implements Rule
 {
@@ -19,12 +20,11 @@ class ValidSymbolRule implements Rule
         if (Cache::has('company-data')) {
             $json = Cache::get('company-data');
         } else {
-            $json = file_get_contents('https://pkgstore.datahub.io/core/nasdaq-listings/nasdaq-listed_json/data/a5bc7580d6176d60ac0b2142ca8d7df6/nasdaq-listed_json.json');
+            $response = Http::get('https://pkgstore.datahub.io/core/nasdaq-listings/nasdaq-listed_json/data/a5bc7580d6176d60ac0b2142ca8d7df6/nasdaq-listed_json.json');
+            $json = $response->json();
             Cache::put('company-data', $json, now()->addMinutes(10));
         }
-
-        $jsonData = json_decode($json, true);
-        foreach ($jsonData as $js) {
+        foreach ($json as $js) {
             array_push($this->symbolData, $js["Symbol"]);
         }
     }

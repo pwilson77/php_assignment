@@ -433,7 +433,12 @@
                     <div class="row g-3">
                         <div class="col">
                             <label for="symbol" class="form-label">Company Symbol</label>
-                            <input type="text" class="form-control" id="symbol" name="symbol" required>
+                            {{-- <input type="text" class="form-control" id="symbol" name="symbol" required> --}}
+                            <div class="input-group mb-3">
+                                <select class="form-select" id="symbol" name="symbol" required>
+                                    <option selected>Choose...</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="col">
                             <label for="email" class="form-label">Email address</label>
@@ -479,7 +484,7 @@
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"
         integrity="sha256-lSjKY0/srUM9BE3dPm+c4fBo1dky2v27Gdjm2uoZaL0=" crossorigin="anonymous"></script>
 
-    <script>
+    <script type="module">
         $(function() {
             $("#startdate").datepicker({
                 dateFormat: "yy-mm-dd"
@@ -488,6 +493,15 @@
                 dateFormat: "yy-mm-dd"
             });
         });
+
+        let selectElement = document.getElementById("symbol");
+        fetch('https://pkgstore.datahub.io/core/nasdaq-listings/nasdaq-listed_json/data/a5bc7580d6176d60ac0b2142ca8d7df6/nasdaq-listed_json.json')
+            .then((response) => response.json())
+            .then((data) => {
+                data.forEach(row => {
+                    selectElement.add(new Option(`${row.Symbol} - ${row['Company Name']}`, row.Symbol))
+                });
+            });
     </script>
 </body>
 
